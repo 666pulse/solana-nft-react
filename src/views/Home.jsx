@@ -1,4 +1,4 @@
-import {Alert, Button, Flex, Form, Input, message, Steps, Upload} from "antd";
+import {Alert, Button, Flex, Form, Input, message, Steps, Upload,Col} from "antd";
 import {useConnection, useWallet} from "@solana/wallet-adapter-react";
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { walletAdapterIdentity } from '@metaplex-foundation/umi-signer-wallet-adapters';
@@ -9,6 +9,8 @@ import {createGenericFileFromBrowserFile, generateSigner, percentAmount} from "@
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 import styled from "styled-components";
+
+const { TextArea } = Input;
 
 const FlexBox = styled.div`
     display: flex;
@@ -31,6 +33,20 @@ const BtnBox = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+`
+
+const AlertBox = styled.div`
+    margin-top: 40px;
+`
+
+const TextBox = styled.div`
+    margin: 40px 0;
+`
+
+const BtmBox= styled.div`
+    margin-bottom: 40px;
+    background: #f5f5f5;
+    padding: 20px;
 `
 
 const TOKEN = import.meta.env.VITE_UPLOADER_TOKEN;
@@ -62,14 +78,15 @@ const beforeUpload = (file) => {
 };
 
 export default function Home({cluster}) {
-    console.log(percentAmount(2));
     const [imageUrl, setImageUrl] = useState("")
     const [loading, setLoading] = useState(false)
     const [imageFile, setImageFile] = useState(null)
     const [step, setStep] = useState(-1)
     const [stepStatus, setStepStatus] = useState(["", "", ""])
     const [nftUrl, setNftUrl] = useState("")
-    const [form] = Form.useForm()
+    const [form] = Form.useForm();
+    const [obj,setObj] = useState(null);
+    const [uri,setUri] = useState('');
 
     const { connection } = useConnection();
     const wallet = useWallet();
@@ -158,7 +175,10 @@ export default function Home({cluster}) {
                 stepStatus[1] = "process"
                 return stepStatus;
             })
-            jsonUrl = await umi.uploader.uploadJson({name, description, image: imageUrl})
+            let obj={name, description, image: imageUrl}
+            setObj(JSON.stringify(obj,null,4))
+            jsonUrl = await umi.uploader.uploadJson(obj)
+            setUri(jsonUrl)
             setStepStatus(stepStatus => {
                 stepStatus[1] = "finish"
                 return stepStatus;
@@ -233,7 +253,7 @@ export default function Home({cluster}) {
                         title: 'Upload Image',
                     },
                     {
-                        title: 'Generate JSON',
+                        title: 'Generate Json',
                     },
                     {
                         title: 'Create NFT',
@@ -287,21 +307,35 @@ export default function Home({cluster}) {
                 <Form.Item name="royalty" label="Royalty" rules={[{ required: false }]}>
                 <Input size="large" addonAfter="%"></Input>
             </Form.Item>
+                <Col span={20} offset={4}>
+                <TextBox>
+                    <TextArea  size="large"  rows={4} readOnly={true} value={obj}/>
+                </TextBox>
+                    <BtmBox>
+                        Json Uri: <span>{uri}</span>
+                    </BtmBox>
+                </Col>
+
                     <BtnBox>
                         <Button type="primary" htmlType="submit" style={{width:200}} size="large" loading={loading}>Create NFT</Button>
                     </BtnBox>
 
             </Form>
 
-            {
-                nftUrl &&
-                <Alert
-                    message="NFT Created"
-                    description={nftUrl}
-                    type="success"
-                    showIcon
-                />
-            }
+
+                <AlertBox>
+                    {
+                        nftUrl &&
+                        <Alert
+                            message="NFT Created"
+                            description={nftUrl}
+                            type="success"
+                            showIcon
+                        />
+                    }
+                </AlertBox>
+
+
             </FormBox>
         </FlexBox>
     )
