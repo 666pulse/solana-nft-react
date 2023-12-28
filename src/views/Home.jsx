@@ -233,7 +233,7 @@ export default function Home({cluster}) {
                         title: 'Upload Image',
                     },
                     {
-                        title: 'Generate Json',
+                        title: 'Generate JSON',
                     },
                     {
                         title: 'Create NFT',
