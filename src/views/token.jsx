@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { styled } from 'styled-components';
-import { Divider, Form, Input, Col, Row, Upload, Switch, Alert, Button } from 'antd';
+import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button } from 'antd';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
@@ -32,10 +32,10 @@ export default function IssueToken() {
         <Row gutter={RowGutter}>
           <Col span={12}>
             <Form.Item name="Decimais" label="Decimais" rules={[{ required: true }]}>
-              <Input size="large" />
+              <InputNumber size="large" style={{ width: '100%' }} step={1} min={1} stringMode precision={0} />
             </Form.Item>
             <Form.Item name="Supply" label="Supply" rules={[{ required: true }]}>
-              <Input size="large" />
+              <InputNumber size="large" style={{ width: '100%' }} step={1} min={1} stringMode precision={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -71,7 +71,7 @@ export default function IssueToken() {
         <Row>
           <Col span={24}>
             <Form.Item name="Token Description" label="Token Description" rules={[{ required: true }]}>
-              <Input.TextArea rows={4} placeholder="Enter Token Description" />
+              <Input.TextArea rows={4} />
             </Form.Item>
           </Col>
         </Row>
