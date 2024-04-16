@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { styled } from 'styled-components';
-import { Divider, Form, Input, Col, Row, Upload } from 'antd';
+import { Divider, Form, Input, Col, Row, Upload, Switch, Alert, Button } from 'antd';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
@@ -75,6 +75,69 @@ export default function IssueToken() {
             </Form.Item>
           </Col>
         </Row>
+        <CardBox>
+          <Card>
+            <div className="el-head">
+              <span>
+                <strong>Immutable</strong>
+              </span>
+              <Switch />
+            </div>
+            <div className="el-content">
+              Renouncing ownership means you will not be able to modify the token metadata. It indeed makes investors
+              feel more secure.
+            </div>
+          </Card>
+          <Card>
+            <div className="el-head">
+              <span>
+                <strong>Relinquish Freezing Right</strong>
+              </span>
+              <Switch />
+            </div>
+            <div className="el-content">
+              Creating a liquidity pool requires relinquishing freezing rights, meaning you can't freeze tokens in
+              holder wallets.
+            </div>
+          </Card>
+          <Card>
+            <div className="el-head">
+              <span>
+                <strong>Relinquish Minting Right</strong>
+              </span>
+              <Switch />
+            </div>
+            <div className="el-content">
+              Relinquishing minting rights is essential for investor security and token success, preventing further
+              token supply.
+            </div>
+          </Card>
+        </CardBox>
+        <Form.Item>
+          <AlertStyle
+            message="The process of creating tokens is significantly influenced by the local network environment. If it continues to fail, try switching to a more stable network or activate the global mode of a VPN before proceeding with the operation."
+            type="warning"
+            showIcon
+          />
+          <AlertStyle
+            message="Solana Network Congestion: The Solana network is currently experiencing congestion. If the program is not functioning properly or if errors occur, please try again."
+            type="warning"
+            showIcon
+            style={{
+              marginTop: '12px',
+            }}
+          />
+        </Form.Item>
+        <Form.Item>
+          <CreateOperator>
+            <div>
+              <Button type="primary" htmlType="submit" style={{ width: 200 }} size="large">
+                Create Token
+              </Button>
+            </div>
+            <CreateTip>The lowest service fee on the entire network is 0.1 SOL.</CreateTip>
+          </CreateOperator>
+        </Form.Item>
       </Form>
     </div>
   );
@@ -86,4 +149,56 @@ const UploadBox = styled.div`
   padding-block: 16px;
   display: flex;
   justify-content: center;
+  &:hover {
+    border-color: #704eb5;
+  }
+`;
+
+const CardBox = styled.div`
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  margin-bottom: 24px;
+`;
+
+const Card = styled.div`
+  flex: 1;
+  padding-inline: 16px;
+  background: linear-gradient(14deg, rgba(255, 255, 255, 0) 0%, #a489d8 100%);
+  border-radius: 5px;
+  padding-bottom: 16px;
+  .el-head {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    padding-top: 18px;
+    padding-bottom: 16px;
+  }
+  .el-content {
+    font-family: PingFang SC, PingFang SC;
+    font-weight: 500;
+    font-size: 14px;
+    color: #666;
+    line-height: 26px;
+  }
+`;
+
+const CreateTip = styled.div`
+  text-align: center;
+  color: rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+`;
+
+const CreateOperator = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+`;
+
+const AlertStyle = styled(Alert)`
+  color: #ff9815;
+  border-color: #ff9815;
+  background: rgba(255, 152, 21, 0.04);
 `;
