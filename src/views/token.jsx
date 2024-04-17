@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { styled } from 'styled-components';
 import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button } from 'antd';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
@@ -60,7 +61,10 @@ const LogoUpload = ({ value, onChange }) => {
             }}
           />
         ) : (
-          <div style={{ marginTop: 8 }}>Upload</div>
+          <div>
+            <PlusOutlined />
+            <div style={{ marginTop: 8 }}>Upload</div>
+          </div>
         )}
       </Upload>
     </UploadBox>
