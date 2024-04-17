@@ -1,13 +1,93 @@
 import React, { useState } from 'react';
 import { styled } from 'styled-components';
 import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button } from 'antd';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import toast from 'react-hot-toast';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
 
+const getBase64 = async (img) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      resolve(reader.result);
+    });
+    reader.addEventListener('error', () => {
+      reject('file reader error');
+    });
+    reader.readAsDataURL(img);
+  });
+};
+
+const MAX_FILE_SIZE = 2; // M
+
+const beforeUpload = (file) => {
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+  if (!isJpgOrPng) {
+    toast.error('You can only upload JPG/PNG file!');
+  }
+  const isLt2M = file.size / 1024 / 1024 <= MAX_FILE_SIZE;
+  if (!isLt2M) {
+    toast.error('Image must smaller than 2MB!');
+  }
+  return isJpgOrPng && isLt2M;
+};
+
+const LogoUpload = ({ value, onChange }) => {
+  const onUpload = async ({ file }) => {
+    try {
+      const base64 = await getBase64(file);
+      onChange(base64);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return (
+    <UploadBox>
+      <Upload
+        accept="image/png, image/jpeg"
+        listType="picture-card"
+        beforeUpload={beforeUpload}
+        customRequest={(option) => onUpload(option)}
+        showUploadList={false}
+      >
+        {value ? (
+          <img
+            src={value}
+            alt="avatar"
+            style={{
+              width: '100%',
+            }}
+          />
+        ) : (
+          <div style={{ marginTop: 8 }}>Upload</div>
+        )}
+      </Upload>
+    </UploadBox>
+  );
+};
+
+const SwitchItem = ({ value, onChange, name, desc }) => {
+  return (
+    <Card>
+      <div className="el-head">
+        <span>
+          <strong>{name}</strong>
+        </span>
+        <Switch onChange={(v) => onChange(v)} />
+      </div>
+      <div className="el-content">{desc}</div>
+    </Card>
+  );
+};
+
 export default function IssueToken() {
-  const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+
+  const onSubmit = (values) => {
+    console.log('submit:', values);
+  };
 
   return (
     <div>
@@ -16,7 +96,7 @@ export default function IssueToken() {
         <Divider />
       </div>
 
-      <Form layout="vertical">
+      <Form layout="vertical" onFinish={onSubmit} form={form}>
         <Row gutter={RowGutter}>
           <Col span={12}>
             <Form.Item name="Token Name" label="Token Name" rules={[{ required: true }]}>
@@ -31,88 +111,55 @@ export default function IssueToken() {
         </Row>
         <Row gutter={RowGutter}>
           <Col span={12}>
-            <Form.Item name="Decimais" label="Decimais" rules={[{ required: true }]}>
+            <Form.Item name="decimais" label="Decimais" rules={[{ required: true }]}>
               <InputNumber size="large" style={{ width: '100%' }} step={1} min={1} stringMode precision={0} />
             </Form.Item>
-            <Form.Item name="Supply" label="Supply" rules={[{ required: true }]}>
+            <Form.Item name="supply" label="Supply" rules={[{ required: true }]}>
               <InputNumber size="large" style={{ width: '100%' }} step={1} min={1} stringMode precision={0} />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="Token Logo" label="Token Logo" rules={[{ required: true }]}>
-              <UploadBox>
-                {' '}
-                <Upload
-                  accept="image/png, image/jpeg"
-                  listType="picture-card"
-                  // beforeUpload={beforeUpload}
-                  // customRequest={(option) => onUpload(option)}
-                  showUploadList={false}
-                >
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt="avatar"
-                      style={{
-                        width: '100%',
-                      }}
-                    />
-                  ) : (
-                    <div>
-                      {loading ? <LoadingOutlined /> : <PlusOutlined />}
-                      <div style={{ marginTop: 8 }}>Upload</div>
-                    </div>
-                  )}
-                </Upload>
-              </UploadBox>
+            <Form.Item name="logo" label="Token Logo" rules={[{ required: true }]}>
+              <LogoUpload />
             </Form.Item>
           </Col>
         </Row>
         <Row>
           <Col span={24}>
-            <Form.Item name="Token Description" label="Token Description" rules={[{ required: true }]}>
+            <Form.Item name="desc" label="Token Description" rules={[{ required: true }]}>
               <Input.TextArea rows={4} />
             </Form.Item>
           </Col>
         </Row>
-        <CardBox>
-          <Card>
-            <div className="el-head">
-              <span>
-                <strong>Immutable</strong>
-              </span>
-              <Switch />
-            </div>
-            <div className="el-content">
-              Renouncing ownership means you will not be able to modify the token metadata. It indeed makes investors
-              feel more secure.
-            </div>
-          </Card>
-          <Card>
-            <div className="el-head">
-              <span>
-                <strong>Relinquish Freezing Right</strong>
-              </span>
-              <Switch />
-            </div>
-            <div className="el-content">
-              Creating a liquidity pool requires relinquishing freezing rights, meaning you can't freeze tokens in
-              holder wallets.
-            </div>
-          </Card>
-          <Card>
-            <div className="el-head">
-              <span>
-                <strong>Relinquish Minting Right</strong>
-              </span>
-              <Switch />
-            </div>
-            <div className="el-content">
-              Relinquishing minting rights is essential for investor security and token success, preventing further
-              token supply.
-            </div>
-          </Card>
-        </CardBox>
+        <Row gutter={RowGutter}>
+          <Col span={8}>
+            <Form.Item name="immutable">
+              <SwitchItem
+                name="Immutable"
+                desc="Renouncing ownership means you will not be able to modify the token metadata. It indeed makes investors
+              feel more secure."
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="relinquishFreezing">
+              <SwitchItem
+                name="Relinquish Freezing Right"
+                desc="Creating a liquidity pool requires relinquishing freezing rights, meaning you can't freeze tokens in
+              holder wallets."
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="relinquishMinting">
+              <SwitchItem
+                name="Relinquish Minting Right"
+                desc="Relinquishing minting rights is essential for investor security and token success, preventing further
+              token supply."
+              />
+            </Form.Item>
+          </Col>
+        </Row>
         <Form.Item>
           <AlertStyle
             message="The process of creating tokens is significantly influenced by the local network environment. If it continues to fail, try switching to a more stable network or activate the global mode of a VPN before proceeding with the operation."
