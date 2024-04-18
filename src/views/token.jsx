@@ -139,12 +139,12 @@ export default function IssueToken() {
       <Form layout="vertical" onFinish={onSubmit} form={form}>
         <Row gutter={RowGutter}>
           <Col span={12}>
-            <Form.Item name="Token Name" label="Token Name" rules={[{ required: true }]}>
+            <Form.Item name="name" label="Token Name" rules={[{ required: true }]}>
               <Input size="large" />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="Token Symbol" label="Token Symbol" rules={[{ required: true }]}>
+            <Form.Item name="symbol" label="Token Symbol" rules={[{ required: true }]}>
               <Input size="large" />
             </Form.Item>
           </Col>
