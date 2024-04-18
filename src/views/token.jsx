@@ -12,6 +12,20 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
 import { getBase64 } from '../utils/image';
 import LoadingModal from '../components/loadingModal';
+import {
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+  createInitializeMintInstruction,
+  getMinimumBalanceForRentExemptMint,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
+} from '@solana/spl-token';
+import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import {
+  createCreateMetadataAccountV3Instruction,
+  MPL_TOKEN_METADATA_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-token-metadata';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
 
@@ -100,16 +114,86 @@ export default function IssueToken() {
   }, [connection.rpcEndpoint, wallet.connected]);
 
   const uploadLogo = async (imgFile) => {
-    if (imgFile.name === fileData?.name && fileData.uri) {
-      return fileData.uri;
-    }
-    const genericFile = await createGenericFileFromBrowserFile(imgFile);
-    const uris = await umi.uploader.upload([genericFile]);
-    setFileData({
-      name: imgFile.name,
-      uri: uris[0],
-    });
-    return uris[0];
+    // if (imgFile.name === fileData?.name && fileData.uri) {
+    //   return fileData.uri;
+    // }
+    // const genericFile = await createGenericFileFromBrowserFile(imgFile);
+    // const uris = await umi.uploader.upload([genericFile]);
+    // setFileData({
+    //   name: imgFile.name,
+    //   uri: uris[0],
+    // });
+    // return uris[0];
+    // TODO hardcode for test
+    return 'https://bafkreibrlvag577xrgktg47y4rtvzys2q5d4hpizkxrz2ntgti6lzaadoy.ipfs.nftstorage.link/';
+  };
+
+  const createToken = async (values, uri) => {
+    const lamports = await getMinimumBalanceForRentExemptMint(connection);
+    const mintKeypair = Keypair.generate();
+    const publicKey = wallet.publicKey;
+    const tokenATA = await getAssociatedTokenAddress(mintKeypair.publicKey, publicKey);
+    console.log('=====MPL_TOKEN_METADATA_PROGRAM_ID', MPL_TOKEN_METADATA_PROGRAM_ID);
+
+    const tx = new Transaction().add(
+      SystemProgram.createAccount({
+        fromPubkey: publicKey,
+        newAccountPubkey: mintKeypair.publicKey,
+        space: MINT_SIZE,
+        lamports: lamports,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+      createInitializeMintInstruction(
+        mintKeypair.publicKey,
+        Number(values.decimals),
+        publicKey, // mintAuthority
+        // values.mintAuthority ? null : publicKey,
+        values.freezeAuthority ? null : publicKey,
+        TOKEN_PROGRAM_ID,
+      ),
+      createAssociatedTokenAccountInstruction(publicKey, tokenATA, publicKey, mintKeypair.publicKey),
+      createMintToInstruction(
+        mintKeypair.publicKey,
+        tokenATA,
+        publicKey, // mintAuthority,
+        Number(values.supply) * Math.pow(10, Number(values.decimals)),
+      ),
+      createCreateMetadataAccountV3Instruction(
+        {
+          metadata: PublicKey.findProgramAddressSync(
+            [
+              Buffer.from('metadata', 'utf-8'),
+              new PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID).toBuffer(),
+              new PublicKey(mintKeypair.publicKey).toBuffer(),
+            ],
+            MPL_TOKEN_METADATA_PROGRAM_ID,
+          )[0],
+          mint: mintKeypair.publicKey,
+          mintAuthority: publicKey,
+          payer: publicKey,
+          updateAuthority: publicKey,
+        },
+        {
+          createMetadataAccountArgsV3: {
+            data: {
+              name: values.name,
+              symbol: values.symbol,
+              description: values.desc,
+              uri: uri,
+              creators: null,
+              sellerFeeBasisPoints: 0,
+              uses: null,
+              collection: null,
+            },
+            isMutable: false, // values.immutable ? true : false,
+            collectionDetails: null,
+          },
+        },
+      ),
+    );
+
+    const txResult = await wallet.sendTransaction(tx, connection, { signers: [mintKeypair] });
+    console.log('txResult:', txResult);
   };
 
   const onSubmit = async (values) => {
@@ -119,11 +203,21 @@ export default function IssueToken() {
       return;
     }
     setLoading(true);
-
+    let uri;
     try {
-      await uploadLogo(values.logo);
+      uri = await uploadLogo(values.logo);
     } catch (error) {
       console.error(error);
+      toast.error(`upload logo failed: ${error}`);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await createToken(values, uri);
+    } catch (error) {
+      console.error(error);
+      toast.error(`create failed: ${error}`);
     } finally {
       setLoading(false);
     }
@@ -151,7 +245,7 @@ export default function IssueToken() {
         </Row>
         <Row gutter={RowGutter}>
           <Col span={12}>
-            <Form.Item name="decimais" label="Decimais" rules={[{ required: true }]}>
+            <Form.Item name="decimals" label="Decimais" rules={[{ required: true }]}>
               <InputNumber size="large" style={{ width: '100%' }} step={1} min={1} stringMode precision={0} />
             </Form.Item>
             <Form.Item name="supply" label="Supply" rules={[{ required: true }]}>
