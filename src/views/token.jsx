@@ -36,7 +36,7 @@ const LogoUpload = ({ value, onChange }) => {
   };
 
   useEffect(() => {
-    getBase64(value).then((d) => setImageData(d));
+    value && getBase64(value).then((d) => setImageData(d));
   }, [value]);
 
   return (
