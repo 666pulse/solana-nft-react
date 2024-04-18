@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { styled } from 'styled-components';
 import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button } from 'antd';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 
-const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
+import { createGenericFileFromBrowserFile } from '@metaplex-foundation/umi';
+import { walletAdapterIdentity } from '@metaplex-foundation/umi-signer-wallet-adapters';
+import { nftStorageUploader } from '@metaplex-foundation/umi-uploader-nft-storage';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
-const getBase64 = async (img) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener('load', () => {
-      resolve(reader.result);
-    });
-    reader.addEventListener('error', () => {
-      reject('file reader error');
-    });
-    reader.readAsDataURL(img);
-  });
-};
+import { getBase64 } from '../utils/image';
+import LoadingModal from '../components/loadingModal';
+
+const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
 
 const MAX_FILE_SIZE = 2; // M
 
@@ -34,14 +30,14 @@ const beforeUpload = (file) => {
 };
 
 const LogoUpload = ({ value, onChange }) => {
+  const [imageData, setImageData] = useState(value);
   const onUpload = async ({ file }) => {
-    try {
-      const base64 = await getBase64(file);
-      onChange(base64);
-    } catch (e) {
-      console.log(e);
-    }
+    onChange(file);
   };
+
+  useEffect(() => {
+    getBase64(value).then((d) => setImageData(d));
+  }, [value]);
 
   return (
     <UploadBox>
@@ -54,7 +50,7 @@ const LogoUpload = ({ value, onChange }) => {
       >
         {value ? (
           <img
-            src={value}
+            src={imageData}
             alt="avatar"
             style={{
               width: '100%',
@@ -85,12 +81,52 @@ const SwitchItem = ({ value, onChange, name, desc }) => {
   );
 };
 
+const TOKEN = import.meta.env.VITE_UPLOADER_TOKEN;
+
 export default function IssueToken() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [fileData, setFileData] = useState();
 
-  const onSubmit = (values) => {
+  const { connection } = useConnection();
+  const wallet = useWallet();
+
+  const umi = useMemo(() => {
+    return !wallet.connected
+      ? null
+      : createUmi(connection.rpcEndpoint)
+          .use(walletAdapterIdentity(wallet))
+          .use(nftStorageUploader({ token: TOKEN }));
+  }, [connection.rpcEndpoint, wallet.connected]);
+
+  const uploadLogo = async (imgFile) => {
+    if (imgFile.name === fileData?.name && fileData.uri) {
+      return fileData.uri;
+    }
+    const genericFile = await createGenericFileFromBrowserFile(imgFile);
+    const uris = await umi.uploader.upload([genericFile]);
+    setFileData({
+      name: imgFile.name,
+      uri: uris[0],
+    });
+    return uris[0];
+  };
+
+  const onSubmit = async (values) => {
     console.log('submit:', values);
+    if (!umi) {
+      toast.error('Please connect wallet first!');
+      return;
+    }
+    setLoading(true);
+
+    try {
+      await uploadLogo(values.logo);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -190,6 +226,7 @@ export default function IssueToken() {
           </CreateOperator>
         </Form.Item>
       </Form>
+      {loading && <LoadingModal text="creating token..." />}
     </div>
   );
 }
