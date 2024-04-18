@@ -22,10 +22,8 @@ import {
   createMintToInstruction,
 } from '@solana/spl-token';
 import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import {
-  createCreateMetadataAccountV3Instruction,
-  MPL_TOKEN_METADATA_PROGRAM_ID,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { createMetadataAccountV3, MPL_TOKEN_METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
+import { fromWeb3JsPublicKey, toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
 
@@ -133,7 +131,54 @@ export default function IssueToken() {
     const mintKeypair = Keypair.generate();
     const publicKey = wallet.publicKey;
     const tokenATA = await getAssociatedTokenAddress(mintKeypair.publicKey, publicKey);
-    console.log('=====MPL_TOKEN_METADATA_PROGRAM_ID', MPL_TOKEN_METADATA_PROGRAM_ID);
+
+    const [metadata] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata', 'utf-8'),
+        new PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID.toString()).toBuffer(),
+        mintKeypair.publicKey.toBuffer(),
+      ],
+      new PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID.toString()),
+    );
+
+    //The tx builder expects the type of mint authority and signer to be `Signer`, so built a dummy Signer instance
+    const signer = {
+      publicKey: fromWeb3JsPublicKey(publicKey),
+      signTransaction: null,
+      signMessage: null,
+      signAllTransactions: null,
+    };
+
+    //Metadata account IX Accounts
+    const accounts = {
+      metadata: fromWeb3JsPublicKey(metadata),
+      mint: fromWeb3JsPublicKey(mintKeypair.publicKey),
+      payer: signer,
+      mintAuthority: signer,
+      updateAuthority: fromWeb3JsPublicKey(publicKey),
+    };
+    const args = {
+      data: {
+        name: values.name,
+        symbol: values.symbol,
+        description: values.desc,
+        uri: uri,
+        creators: null,
+        sellerFeeBasisPoints: 0,
+        uses: null,
+        collection: null,
+      },
+      isMutable: !!values.immutable,
+      collectionDetails: null,
+    };
+
+    const metadataBuilder = createMetadataAccountV3(umi, { ...accounts, ...args });
+    const metadataInstruction = metadataBuilder.getInstructions()[0];
+    metadataInstruction.keys = ix.keys.map((key) => {
+      const newKey = { ...key };
+      newKey.pubkey = toWeb3JsPublicKey(key.pubkey);
+      return newKey;
+    });
 
     const tx = new Transaction().add(
       SystemProgram.createAccount({
@@ -158,38 +203,7 @@ export default function IssueToken() {
         publicKey, // mintAuthority,
         Number(values.supply) * Math.pow(10, Number(values.decimals)),
       ),
-      createCreateMetadataAccountV3Instruction(
-        {
-          metadata: PublicKey.findProgramAddressSync(
-            [
-              Buffer.from('metadata', 'utf-8'),
-              new PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID).toBuffer(),
-              new PublicKey(mintKeypair.publicKey).toBuffer(),
-            ],
-            MPL_TOKEN_METADATA_PROGRAM_ID,
-          )[0],
-          mint: mintKeypair.publicKey,
-          mintAuthority: publicKey,
-          payer: publicKey,
-          updateAuthority: publicKey,
-        },
-        {
-          createMetadataAccountArgsV3: {
-            data: {
-              name: values.name,
-              symbol: values.symbol,
-              description: values.desc,
-              uri: uri,
-              creators: null,
-              sellerFeeBasisPoints: 0,
-              uses: null,
-              collection: null,
-            },
-            isMutable: false, // values.immutable ? true : false,
-            collectionDetails: null,
-          },
-        },
-      ),
+      metadataInstruction,
     );
 
     const txResult = await wallet.sendTransaction(tx, connection, { signers: [mintKeypair] });
