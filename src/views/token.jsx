@@ -182,7 +182,7 @@ export default function IssueToken() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="relinquishFreezing">
+            <Form.Item name="freezeAuthority">
               <SwitchItem
                 name="Relinquish Freezing Right"
                 desc="Creating a liquidity pool requires relinquishing freezing rights, meaning you can't freeze tokens in
@@ -191,7 +191,7 @@ export default function IssueToken() {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="relinquishMinting">
+            <Form.Item name="mintAuthority">
               <SwitchItem
                 name="Relinquish Minting Right"
                 desc="Relinquishing minting rights is essential for investor security and token success, preventing further
