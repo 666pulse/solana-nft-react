@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { styled } from 'styled-components';
-import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button } from 'antd';
+import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button, Modal } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 
@@ -96,9 +96,11 @@ const SwitchItem = ({ value, onChange, name, desc }) => {
 const TOKEN = import.meta.env.VITE_UPLOADER_TOKEN;
 
 export default function IssueToken() {
-  const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState(false);
   const [form] = Form.useForm();
   const [fileData, setFileData] = useState();
+  const [metaData, setMetaData] = useState();
+  const [txHash, setTxHash] = useState();
 
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -124,6 +126,27 @@ export default function IssueToken() {
     // return uris[0];
     // TODO hardcode for test
     return 'https://bafkreibrlvag577xrgktg47y4rtvzys2q5d4hpizkxrz2ntgti6lzaadoy.ipfs.nftstorage.link/';
+  };
+
+  const uploadMetadata = async (data) => {
+    console.log('metadata:', data);
+    console.log('old metadata', metaData);
+    // const str = JSON.stringify(data);
+    // if (str === metaData?.dataStr && metaData.uri) {
+    //   return metaData.uri;
+    // }
+    // // covert json to json file
+    // const blob = new Blob([str], { type: 'application/json' });
+    // const file = new File([blob], `${data.name}.json`, { type: 'application/json' });
+    // // upload
+    // const genericFile = await createGenericFileFromBrowserFile(file);
+    // const uris = await umi.uploader.upload([genericFile]);
+    // setMetaData({
+    //   dataStr: str,
+    //   uri: uris[0],
+    // });
+    // return uris[0];
+    return 'https://nftstorage.link/ipfs/bafkreidi25lnpc5zl3qv2h6xtj6o4umzkstcog3zp56x4a3rp3v7jc6oz4';
   };
 
   const createToken = async (values, uri) => {
@@ -174,7 +197,7 @@ export default function IssueToken() {
 
     const metadataBuilder = createMetadataAccountV3(umi, { ...accounts, ...args });
     const metadataInstruction = metadataBuilder.getInstructions()[0];
-    metadataInstruction.keys = ix.keys.map((key) => {
+    metadataInstruction.keys = metadataInstruction.keys.map((key) => {
       const newKey = { ...key };
       newKey.pubkey = toWeb3JsPublicKey(key.pubkey);
       return newKey;
@@ -208,6 +231,7 @@ export default function IssueToken() {
 
     const txResult = await wallet.sendTransaction(tx, connection, { signers: [mintKeypair] });
     console.log('txResult:', txResult);
+    return txResult;
   };
 
   const onSubmit = async (values) => {
@@ -216,25 +240,55 @@ export default function IssueToken() {
       toast.error('Please connect wallet first!');
       return;
     }
-    setLoading(true);
-    let uri;
+    setLoadingText('uploading logo...');
+    let logoUri;
     try {
-      uri = await uploadLogo(values.logo);
+      logoUri = await uploadLogo(values.logo);
     } catch (error) {
       console.error(error);
       toast.error(`upload logo failed: ${error}`);
-      setLoading(false);
+      setLoadingText(false);
       return;
     }
+    setLoadingText('uploading metadata...');
+    let metadataUri;
+    try {
+      metadataUri = await uploadMetadata({
+        name: values.name,
+        symbol: values.symbol,
+        decimals: values.decimals,
+        image: logoUri,
+        description: values.desc,
+        // extensions: {
+        //   twitter: values.twitter,
+        //   telegram: values.telegram,
+        //   site: values.site,
+        // },
+      });
+      console.log('metadataUri: ', metadataUri);
+    } catch (error) {
+      console.error(error);
+      toast.error(`upload metadata failed: ${error}`);
+      setLoadingText(false);
+      return;
+    }
+    setLoadingText('creating token...');
 
     try {
-      await createToken(values, uri);
+      const txResult = await createToken(values, metadataUri);
+      setTxHash(txResult);
+      form.resetFields();
     } catch (error) {
       console.error(error);
       toast.error(`create failed: ${error}`);
     } finally {
-      setLoading(false);
+      setLoadingText(false);
     }
+  };
+
+  const openTxExplore = () => {
+    window.open(`https://solscan.io/token/${txHash}`);
+    setTxHash('');
   };
 
   return (
@@ -330,11 +384,23 @@ export default function IssueToken() {
                 Create Token
               </Button>
             </div>
-            <CreateTip>The lowest service fee on the entire network is 0.1 SOL.</CreateTip>
+            {/* <CreateTip>The lowest service fee on the entire network is 0.1 SOL.</CreateTip> */}
           </CreateOperator>
         </Form.Item>
       </Form>
-      {loading && <LoadingModal text="creating token..." />}
+      {loadingText && <LoadingModal text={loadingText} />}
+      {txHash && (
+        <Modal
+          title="Created Successfully"
+          open={!!txHash}
+          okText={'Go to'}
+          cancelText={'Close'}
+          onOk={() => openTxExplore()}
+          onCancel={() => setTxHash('')}
+        >
+          <p>Transaction hash:{txHash}</p>
+        </Modal>
+      )}
     </div>
   );
 }
