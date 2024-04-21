@@ -257,7 +257,7 @@ export default function IssueToken() {
       metadataUri = await uploadMetadata({
         name: values.name,
         symbol: values.symbol,
-        decimals: values.decimals,
+        decimals: Number(values.decimals),
         image: logoUri,
         description: values.desc,
         // extensions: {
