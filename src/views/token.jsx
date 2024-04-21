@@ -24,6 +24,7 @@ import {
 import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { createMetadataAccountV3, MPL_TOKEN_METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
 import { fromWeb3JsPublicKey, toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
+import { useAppContext } from '../store/appProvider';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
 
@@ -101,6 +102,7 @@ export default function IssueToken() {
   const [fileData, setFileData] = useState();
   const [metaData, setMetaData] = useState();
   const [txHash, setTxHash] = useState();
+  const { network } = useAppContext();
 
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -285,7 +287,12 @@ export default function IssueToken() {
   };
 
   const openTxExplore = () => {
-    window.open(`https://solscan.io/token/${txHash}`);
+    let cluster = '';
+    if (network !== 'mainnet-beta') {
+      cluster = `?cluster=${network}`;
+    }
+    window.open(`https://explorer.solana.com/tx/${txHash}${cluster}`);
+
     setTxHash('');
   };
 
@@ -396,7 +403,8 @@ export default function IssueToken() {
           onOk={() => openTxExplore()}
           onCancel={() => setTxHash('')}
         >
-          <p>Transaction hash:{txHash}</p>
+          <p>Transaction hash: </p>
+          <p>{txHash}</p>
         </Modal>
       )}
     </div>
