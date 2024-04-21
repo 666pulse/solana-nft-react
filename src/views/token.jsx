@@ -101,7 +101,8 @@ export default function IssueToken() {
   const [form] = Form.useForm();
   const [fileData, setFileData] = useState();
   const [metaData, setMetaData] = useState();
-  const [txHash, setTxHash] = useState();
+  const [txHash, setTxHash] = useState('');
+  const [tokenAddress, setTokenAddress] = useState('');
   const { network } = useAppContext();
 
   const { connection } = useConnection();
@@ -286,15 +287,19 @@ export default function IssueToken() {
     }
   };
 
-  const openTxExplore = () => {
+  const txLink = useMemo(() => {
+    if (!txHash) {
+      return '';
+    }
     let cluster = '';
     if (network !== 'mainnet-beta') {
       cluster = `?cluster=${network}`;
     }
-    window.open(`https://explorer.solana.com/tx/${txHash}${cluster}`);
-
-    setTxHash('');
-  };
+    return {
+      tx: `https://explorer.solana.com/tx/${txHash}${cluster}`,
+      token: `https://explorer.solana.com/address/${tokenAddress}${cluster}`,
+    };
+  }, [network, txHash, tokenAddress]);
 
   return (
     <div>
@@ -396,15 +401,26 @@ export default function IssueToken() {
       {loadingText && <LoadingModal text={loadingText} />}
       {txHash && (
         <Modal
-          title="Created Successfully"
+          title="Successfully"
           open={!!txHash}
-          okText={'Go to'}
-          cancelText={'Close'}
-          onOk={() => openTxExplore()}
-          onCancel={() => setTxHash('')}
+          footer={null}
+          onCancel={() => {
+            setTxHash('');
+            setTokenAddress('');
+          }}
         >
-          <p>Transaction hash: </p>
-          <p>{txHash}</p>
+          <TxLinkBlock>
+            <h4>Transaction hash: </h4>
+            <a target="_blank" href={txLink?.tx}>
+              {txHash}
+            </a>
+          </TxLinkBlock>
+          <TxLinkBlock>
+            <h4>Token Address: </h4>
+            <a target="_blank" href={txLink?.token}>
+              {tokenAddress}
+            </a>
+          </TxLinkBlock>
         </Modal>
       )}
     </div>
@@ -469,4 +485,8 @@ const AlertStyle = styled(Alert)`
   color: #ff9815;
   border-color: #ff9815;
   background: rgba(255, 152, 21, 0.04);
+`;
+
+const TxLinkBlock = styled.div`
+  margin-block: 10px;
 `;
