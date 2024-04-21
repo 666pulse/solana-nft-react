@@ -415,12 +415,12 @@ export default function IssueToken() {
               {txHash}
             </a>
           </TxLinkBlock>
-          <TxLinkBlock>
+          {/* <TxLinkBlock>
             <h4>Token Address: </h4>
             <a target="_blank" href={txLink?.token}>
               {tokenAddress}
             </a>
-          </TxLinkBlock>
+          </TxLinkBlock> */}
         </Modal>
       )}
     </div>
