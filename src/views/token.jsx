@@ -61,7 +61,7 @@ const LogoUpload = ({ value, onChange }) => {
         customRequest={(option) => onUpload(option)}
         showUploadList={false}
       >
-        {value ? (
+        {imageData ? (
           <img
             src={imageData}
             alt="avatar"
