@@ -114,39 +114,37 @@ export default function IssueToken() {
   }, [connection.rpcEndpoint, wallet.connected]);
 
   const uploadLogo = async (imgFile) => {
-    // if (imgFile.name === fileData?.name && fileData.uri) {
-    //   return fileData.uri;
-    // }
-    // const genericFile = await createGenericFileFromBrowserFile(imgFile);
-    // const uris = await umi.uploader.upload([genericFile]);
-    // setFileData({
-    //   name: imgFile.name,
-    //   uri: uris[0],
-    // });
-    // return uris[0];
-    // TODO hardcode for test
-    return 'https://bafkreibrlvag577xrgktg47y4rtvzys2q5d4hpizkxrz2ntgti6lzaadoy.ipfs.nftstorage.link/';
+    if (imgFile.name === fileData?.name && fileData.uri) {
+      return fileData.uri;
+    }
+    const genericFile = await createGenericFileFromBrowserFile(imgFile);
+    const uris = await umi.uploader.upload([genericFile]);
+    setFileData({
+      name: imgFile.name,
+      uri: uris[0],
+    });
+    return uris[0];
+    // return 'https://bafkreibrlvag577xrgktg47y4rtvzys2q5d4hpizkxrz2ntgti6lzaadoy.ipfs.nftstorage.link/';
   };
 
   const uploadMetadata = async (data) => {
     console.log('metadata:', data);
-    console.log('old metadata', metaData);
-    // const str = JSON.stringify(data);
-    // if (str === metaData?.dataStr && metaData.uri) {
-    //   return metaData.uri;
-    // }
-    // // covert json to json file
-    // const blob = new Blob([str], { type: 'application/json' });
-    // const file = new File([blob], `${data.name}.json`, { type: 'application/json' });
-    // // upload
-    // const genericFile = await createGenericFileFromBrowserFile(file);
-    // const uris = await umi.uploader.upload([genericFile]);
-    // setMetaData({
-    //   dataStr: str,
-    //   uri: uris[0],
-    // });
-    // return uris[0];
-    return 'https://nftstorage.link/ipfs/bafkreidi25lnpc5zl3qv2h6xtj6o4umzkstcog3zp56x4a3rp3v7jc6oz4';
+    const str = JSON.stringify(data);
+    if (str === metaData?.dataStr && metaData.uri) {
+      return metaData.uri;
+    }
+    // covert json to json file
+    const blob = new Blob([str], { type: 'application/json' });
+    const file = new File([blob], `${data.name}.json`, { type: 'application/json' });
+    // upload
+    const genericFile = await createGenericFileFromBrowserFile(file);
+    const uris = await umi.uploader.upload([genericFile]);
+    setMetaData({
+      dataStr: str,
+      uri: uris[0],
+    });
+    return uris[0];
+    // return 'https://nftstorage.link/ipfs/bafkreidi25lnpc5zl3qv2h6xtj6o4umzkstcog3zp56x4a3rp3v7jc6oz4';
   };
 
   const createToken = async (values, uri) => {
