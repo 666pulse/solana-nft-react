@@ -28,7 +28,7 @@ import { useAppContext } from '../store/appProvider';
 
 const RowGutter = { xs: 8, sm: 16, md: 24, lg: 32 };
 
-const MAX_FILE_SIZE = 2; // M
+const MAX_FILE_SIZE = 2; // 2Mb
 
 const beforeUpload = (file) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
@@ -127,7 +127,6 @@ export default function IssueToken() {
       uri: uris[0],
     });
     return uris[0];
-    // return 'https://bafkreibrlvag577xrgktg47y4rtvzys2q5d4hpizkxrz2ntgti6lzaadoy.ipfs.nftstorage.link/';
   };
 
   const uploadMetadata = async (data) => {
@@ -147,7 +146,6 @@ export default function IssueToken() {
       uri: uris[0],
     });
     return uris[0];
-    // return 'https://nftstorage.link/ipfs/bafkreidi25lnpc5zl3qv2h6xtj6o4umzkstcog3zp56x4a3rp3v7jc6oz4';
   };
 
   const createToken = async (values, uri) => {
@@ -338,7 +336,7 @@ export default function IssueToken() {
         </Row>
         <Row>
           <Col span={24}>
-            <Form.Item name="desc" label="Token Description" rules={[{ required: true }]}>
+            <Form.Item name="desc" label="Token Description" rules={[{ required: false }]}>
               <Input.TextArea rows={4} />
             </Form.Item>
           </Col>

@@ -48,7 +48,8 @@ const BtmBox = styled.div`
 `;
 
 const TOKEN = import.meta.env.VITE_UPLOADER_TOKEN;
-const MAX_FILE_SIZE = 2; // M
+
+const MAX_FILE_SIZE = 2; // 2Mb
 
 const getBase64 = async (img) => {
   return new Promise((resolve, reject) => {
