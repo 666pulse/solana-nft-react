@@ -16,6 +16,8 @@
     "@metaplex-foundation/umi-bundle-defaults": "^0.8.10",
     "@metaplex-foundation/umi-signer-wallet-adapters": "^0.8.10",
     "@metaplex-foundation/umi-uploader-nft-storage": "^0.8.10",
+    "@metaplex-foundation/umi-web3js-adapters": "^0.9.1",
+    "@solana/spl-token": "^0.4.3",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.34",
@@ -25,6 +27,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^6.22.3",
     "styled-components": "^6.1.4"
   },
   "devDependencies": {
