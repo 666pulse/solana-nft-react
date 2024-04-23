@@ -301,8 +301,29 @@ export default function IssueToken() {
     <div>
       <div>
         <h1>Issue Token</h1>
-        <Divider />
       </div>
+
+      <TipBox>
+        <p>
+          <span style={{ fontSize: '16px' }}>
+            <strong>·</strong>
+          </span>{' '}
+          The process of creating tokens is significantly influenced by the local network environment. If it continues
+          to fail, try switching to a more stable network or activate the global mode of a VPN before proceeding with
+          the operation.
+        </p>
+        <p
+          style={{
+            marginTop: '12px',
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>
+            <strong>·</strong>
+          </span>{' '}
+          Solana Network Congestion: The Solana network is currently experiencing congestion. If the program is not
+          functioning properly or if errors occur, please try again.
+        </p>
+      </TipBox>
 
       <Form layout="vertical" onFinish={onSubmit} form={form}>
         <Row gutter={RowGutter}>
@@ -368,21 +389,6 @@ export default function IssueToken() {
             </Form.Item>
           </Col>
         </Row>
-        <Form.Item>
-          <AlertStyle
-            message="The process of creating tokens is significantly influenced by the local network environment. If it continues to fail, try switching to a more stable network or activate the global mode of a VPN before proceeding with the operation."
-            type="warning"
-            showIcon
-          />
-          <AlertStyle
-            message="Solana Network Congestion: The Solana network is currently experiencing congestion. If the program is not functioning properly or if errors occur, please try again."
-            type="warning"
-            showIcon
-            style={{
-              marginTop: '12px',
-            }}
-          />
-        </Form.Item>
         <Form.Item>
           <CreateOperator>
             <div>
@@ -462,12 +468,15 @@ const CreateOperator = styled.div`
   gap: 12px;
 `;
 
-const AlertStyle = styled(Alert)`
-  color: #ff9815;
-  border-color: #ff9815;
-  background: rgba(255, 152, 21, 0.04);
-`;
-
 const TxLinkBlock = styled.div`
   margin-block: 10px;
+`;
+
+const TipBox = styled.div`
+  border-radius: 8px;
+  background-color: #efefef;
+  padding: 11px;
+  margin-top: 24px;
+  margin-bottom: 36px;
+  color: #666;
 `;
