@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { styled } from 'styled-components';
-import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button, Modal } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button, Modal, Tooltip } from 'antd';
+import { PlusOutlined, InfoCircleFilled } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
@@ -83,13 +83,11 @@ const LogoUpload = ({ value, onChange }) => {
 const SwitchItem = ({ value, onChange, name, desc }) => {
   return (
     <Card>
-      <div className="el-head">
-        <span>
-          <strong>{name}</strong>
-        </span>
-        <Switch onChange={(v) => onChange(v)} />
-      </div>
-      <div className="el-content">{desc}</div>
+      <div>{name}</div>
+      <Tooltip placement="top" title={desc}>
+        <InfoCircleFilled />
+      </Tooltip>
+      <Switch onChange={(v) => onChange(v)} style={{ marginLeft: '20px' }} />
     </Card>
   );
 };
@@ -445,24 +443,9 @@ const CardBox = styled.div`
 
 const Card = styled.div`
   flex: 1;
-  padding-inline: 16px;
-  background: linear-gradient(14deg, rgba(255, 255, 255, 0) 0%, #a489d8 100%);
-  border-radius: 5px;
-  padding-bottom: 16px;
-  .el-head {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    padding-top: 18px;
-    padding-bottom: 16px;
-  }
-  .el-content {
-    font-family: PingFang SC, PingFang SC;
-    font-weight: 500;
-    font-size: 14px;
-    color: #666;
-    line-height: 26px;
-  }
+  display: flex;
+  gap: 10px;
+  align-items: center;
 `;
 
 const CreateTip = styled.div`
