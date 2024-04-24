@@ -15,11 +15,13 @@ import LoadingModal from '../components/loadingModal';
 import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
+  AuthorityType,
   createInitializeMintInstruction,
   getMinimumBalanceForRentExemptMint,
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
   createMintToInstruction,
+  createSetAuthorityInstruction,
 } from '@solana/spl-token';
 import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { createMetadataAccountV3, MPL_TOKEN_METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
@@ -200,6 +202,14 @@ export default function IssueToken() {
       return newKey;
     });
 
+    const closeMintAuthorityInstruction = createSetAuthorityInstruction(
+      TOKEN_PROGRAM_ID,
+      mintKeypair.publicKey,
+      AuthorityType.MintTokens,
+      null,
+      [],
+    );
+
     const tx = new Transaction().add(
       SystemProgram.createAccount({
         fromPubkey: publicKey,
@@ -212,7 +222,6 @@ export default function IssueToken() {
         mintKeypair.publicKey,
         Number(values.decimals),
         publicKey, // mintAuthority
-        // values.mintAuthority ? null : publicKey,
         values.freezeAuthority ? null : publicKey,
         TOKEN_PROGRAM_ID,
       ),
@@ -225,6 +234,10 @@ export default function IssueToken() {
       ),
       metadataInstruction,
     );
+    if (!!values.mintAuthority) {
+      console.log('=== close mint authority ===');
+      tx.add(closeMintAuthorityInstruction);
+    }
 
     const txResult = await wallet.sendTransaction(tx, connection, { signers: [mintKeypair] });
     console.log('txResult:', txResult);
