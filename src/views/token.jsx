@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { styled } from 'styled-components';
-import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button, Modal } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Divider, Form, Input, InputNumber, Col, Row, Upload, Switch, Alert, Button, Modal, Tooltip } from 'antd';
+import { PlusOutlined, InfoCircleFilled } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
@@ -15,11 +15,13 @@ import LoadingModal from '../components/loadingModal';
 import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
+  AuthorityType,
   createInitializeMintInstruction,
   getMinimumBalanceForRentExemptMint,
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
   createMintToInstruction,
+  createSetAuthorityInstruction,
 } from '@solana/spl-token';
 import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { createMetadataAccountV3, MPL_TOKEN_METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
@@ -83,13 +85,11 @@ const LogoUpload = ({ value, onChange }) => {
 const SwitchItem = ({ value, onChange, name, desc }) => {
   return (
     <Card>
-      <div className="el-head">
-        <span>
-          <strong>{name}</strong>
-        </span>
-        <Switch onChange={(v) => onChange(v)} />
-      </div>
-      <div className="el-content">{desc}</div>
+      <div>{name}</div>
+      <Tooltip placement="top" title={desc}>
+        <InfoCircleFilled />
+      </Tooltip>
+      <Switch onChange={(v) => onChange(v)} style={{ marginLeft: '20px' }} />
     </Card>
   );
 };
@@ -214,7 +214,6 @@ export default function IssueToken() {
         mintKeypair.publicKey,
         Number(values.decimals),
         publicKey, // mintAuthority
-        // values.mintAuthority ? null : publicKey,
         values.freezeAuthority ? null : publicKey,
         TOKEN_PROGRAM_ID,
       ),
@@ -227,6 +226,17 @@ export default function IssueToken() {
       ),
       metadataInstruction,
     );
+    if (!!values.mintAuthority) {
+      console.log('=== close mint authority ===');
+      const closeMintAuthorityInstruction = createSetAuthorityInstruction(
+        mintKeypair.publicKey,
+        publicKey,
+        AuthorityType.MintTokens,
+        null,
+        [],
+      );
+      tx.add(closeMintAuthorityInstruction);
+    }
 
     const txResult = await wallet.sendTransaction(tx, connection, { signers: [mintKeypair] });
     console.log('txResult:', txResult);
@@ -303,8 +313,29 @@ export default function IssueToken() {
     <div>
       <div>
         <h1>Issue Token</h1>
-        <Divider />
       </div>
+
+      <TipBox>
+        <p>
+          <span style={{ fontSize: '16px' }}>
+            <strong>·</strong>
+          </span>{' '}
+          The process of creating tokens is significantly influenced by the local network environment. If it continues
+          to fail, try switching to a more stable network or activate the global mode of a VPN before proceeding with
+          the operation.
+        </p>
+        <p
+          style={{
+            marginTop: '12px',
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>
+            <strong>·</strong>
+          </span>{' '}
+          Solana Network Congestion: The Solana network is currently experiencing congestion. If the program is not
+          functioning properly or if errors occur, please try again.
+        </p>
+      </TipBox>
 
       <Form layout="vertical" onFinish={onSubmit} form={form}>
         <Row gutter={RowGutter}>
@@ -371,21 +402,6 @@ export default function IssueToken() {
           </Col>
         </Row>
         <Form.Item>
-          <AlertStyle
-            message="The process of creating tokens is significantly influenced by the local network environment. If it continues to fail, try switching to a more stable network or activate the global mode of a VPN before proceeding with the operation."
-            type="warning"
-            showIcon
-          />
-          <AlertStyle
-            message="Solana Network Congestion: The Solana network is currently experiencing congestion. If the program is not functioning properly or if errors occur, please try again."
-            type="warning"
-            showIcon
-            style={{
-              marginTop: '12px',
-            }}
-          />
-        </Form.Item>
-        <Form.Item>
           <CreateOperator>
             <div>
               <Button type="primary" htmlType="submit" style={{ width: 200 }} size="large">
@@ -445,24 +461,9 @@ const CardBox = styled.div`
 
 const Card = styled.div`
   flex: 1;
-  padding-inline: 16px;
-  background: linear-gradient(14deg, rgba(255, 255, 255, 0) 0%, #a489d8 100%);
-  border-radius: 5px;
-  padding-bottom: 16px;
-  .el-head {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    padding-top: 18px;
-    padding-bottom: 16px;
-  }
-  .el-content {
-    font-family: PingFang SC, PingFang SC;
-    font-weight: 500;
-    font-size: 14px;
-    color: #666;
-    line-height: 26px;
-  }
+  display: flex;
+  gap: 10px;
+  align-items: center;
 `;
 
 const CreateTip = styled.div`
@@ -479,12 +480,15 @@ const CreateOperator = styled.div`
   gap: 12px;
 `;
 
-const AlertStyle = styled(Alert)`
-  color: #ff9815;
-  border-color: #ff9815;
-  background: rgba(255, 152, 21, 0.04);
-`;
-
 const TxLinkBlock = styled.div`
   margin-block: 10px;
+`;
+
+const TipBox = styled.div`
+  border-radius: 8px;
+  background-color: #efefef;
+  padding: 11px;
+  margin-top: 24px;
+  margin-bottom: 36px;
+  color: #666;
 `;
