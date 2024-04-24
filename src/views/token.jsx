@@ -229,8 +229,8 @@ export default function IssueToken() {
     if (!!values.mintAuthority) {
       console.log('=== close mint authority ===');
       const closeMintAuthorityInstruction = createSetAuthorityInstruction(
-        TOKEN_PROGRAM_ID,
         mintKeypair.publicKey,
+        publicKey,
         AuthorityType.MintTokens,
         null,
         [],
