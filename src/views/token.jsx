@@ -202,14 +202,6 @@ export default function IssueToken() {
       return newKey;
     });
 
-    const closeMintAuthorityInstruction = createSetAuthorityInstruction(
-      TOKEN_PROGRAM_ID,
-      mintKeypair.publicKey,
-      AuthorityType.MintTokens,
-      null,
-      [],
-    );
-
     const tx = new Transaction().add(
       SystemProgram.createAccount({
         fromPubkey: publicKey,
@@ -236,6 +228,13 @@ export default function IssueToken() {
     );
     if (!!values.mintAuthority) {
       console.log('=== close mint authority ===');
+      const closeMintAuthorityInstruction = createSetAuthorityInstruction(
+        TOKEN_PROGRAM_ID,
+        mintKeypair.publicKey,
+        AuthorityType.MintTokens,
+        null,
+        [],
+      );
       tx.add(closeMintAuthorityInstruction);
     }
 
